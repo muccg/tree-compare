@@ -1,6 +1,21 @@
 #!/usr/bin/env python2.6
 
-import sys, os, stat, json
+"""
+Usage: 
+  tree-compare.py [options] MASTER_DIRECTORY SCAN_DIRECTORY
+
+Options:
+  -c --cache=NAME  Cache file for SHA1 sums
+  -t --target  Target directory 
+  -x --output-shellscript=NAME  Write shell script to filename which executes required cp/mkdir (requires -t)
+  -l --log=NAME  Write log to file (CSV format)
+
+"""
+
+__version__ = '0.0.1'
+
+from docopt import docopt
+import sys, os, stat, json, csv, time
 from pprint import pprint
 from hashlib import sha1
 
@@ -47,6 +62,9 @@ class FileInformation(object):
 
     def get_abspath(self):
         return os.path.join(self.base_path, self.path)
+
+    def get_mtime(self):
+        return self.stat_info.st_mtime
 
     def get_key(self):
         return self.key
@@ -122,11 +140,7 @@ class Inventory(object):
 class Hasher(object):
     def __init__(self, fpath):
         self.fpath = fpath
-        try:
-            with open(self.fpath) as fd:
-                self.cache = json.load(fd)
-        except IOError:
-            self.cache = {}
+        self.cache = self.load()
         self.dirty = False
 
     def set(self, k, v):
@@ -147,34 +161,69 @@ class Hasher(object):
             self.set(fname, h.hexdigest())
         return self.cache[fname]
 
+    def load(self):
+        if self.fpath is None:
+            return {}
+        try:
+            with open(self.fpath) as fd:
+                return json.load(fd)
+        except IOError:
+            return {}
+
     def save(self):
         if not self.dirty:
-            pass
+            return
+        if self.fpath is None:
+            return
         tmp = self.fpath + '.tmp'
         with open(tmp, 'w') as fd:
             json.dump(self.cache, fd)
         os.rename(tmp, self.fpath)
 
 if __name__ == '__main__':
-    hasher = Hasher(sys.argv[1])
-    from_inventory, to_inventory = [Inventory(hasher, t) for t in sys.argv[2:]]
+    def run():
+        hasher = Hasher(args['--cache'])
+        master_inventory = Inventory(hasher, args['MASTER_DIRECTORY'])
+        scan_inventory = Inventory(hasher, args['SCAN_DIRECTORY'])
 
-    def build_copy_actions(inv_a, inv_b):
-        inv_a_set = inv_a.key_set()
-        inv_b_set = inv_b.key_set()
+        def build_copy_list(inv_a, inv_b):
+            inv_a_set = inv_a.key_set()
+            inv_b_set = inv_b.key_set()
 
-        to_copy = []
+            to_copy = []
+            total_size = 0
 
-        for key in sorted(inv_a_set - inv_b_set, key=lambda k: k.get_basename()):
-            infos = inv_a.lookup_key(key)
-            if len(infos) > 1:
-                raise Exception("true (identical) file duplicate. abort.")
-            to_copy.append(infos[0])
+            abort = False
 
-        for info in sorted(to_copy, key=lambda i: i.get_abspath()):
-            print (info.get_abspath())
+            for key in sorted(inv_a_set - inv_b_set, key=lambda k: k.get_basename()):
+                infos = inv_a.lookup_key(key)
+                if len(infos) > 1:
+                    print >>sys.stderr, "** Identical files in master **"
+                    for info in sorted(infos, key=lambda k: k.get_abspath()):
+                        print >>sys.stderr, "    %s" % (info.get_abspath())
+                to_copy.append(infos[0])
+                total_size += infos[0].get_size()
 
-    hasher.save()
+            print >>sys.stderr, "total size of copy: %.2fGB" % (total_size/(1<<30)) 
+            return to_copy
 
-    actions = build_copy_actions(from_inventory, to_inventory)
+        def write_debug_log(to_copy):
+            outf = args['--log']
+            if outf is None:
+                return
+            with open(outf, 'w') as fd:
+                writer = csv.writer(fd)
+                writer.writerow([ 'Timestamp', 'Filename' ])
+                for info in sorted(to_copy, key=lambda i: i.get_abspath()):
+                    writer.writerow( [ time.strftime("%Y-%m-%d", time.localtime(info.get_mtime())), info.get_abspath() ])
 
+        def write_shell_script(to_copy):
+            pass
+
+        hasher.save()
+        to_copy = build_copy_list(master_inventory, scan_inventory)
+        write_debug_log(to_copy)
+        write_shell_script(to_copy)
+
+    args = docopt(__doc__, version=__version__)
+    run()
