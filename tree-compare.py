@@ -6,7 +6,7 @@ Usage:
 
 Options:
   -c --cache=NAME  Cache file for SHA1 sums
-  -t --target  Target directory 
+  -t --target=NAME  Target directory 
   -x --output-shellscript=NAME  Write shell script to filename which executes required cp/mkdir (requires -t)
   -l --log=NAME  Write log to file (CSV format)
 
@@ -15,7 +15,7 @@ Options:
 __version__ = '0.0.1'
 
 from docopt import docopt
-import sys, os, stat, json, csv, time
+import sys, os, stat, json, csv, time, pipes
 from pprint import pprint
 from hashlib import sha1
 
@@ -204,7 +204,7 @@ if __name__ == '__main__':
                 to_copy.append(infos[0])
                 total_size += infos[0].get_size()
 
-            print >>sys.stderr, "total size of copy: %.2fGB" % (total_size/(1<<30)) 
+            print >>sys.stderr, "%s: total size of copy: %gGB" % (master_inventory.get_dir(), total_size/(1<<30)) 
             return to_copy
 
         def write_debug_log(to_copy):
@@ -218,12 +218,32 @@ if __name__ == '__main__':
                     writer.writerow( [ time.strftime("%Y-%m-%d", time.localtime(info.get_mtime())), info.get_abspath() ])
 
         def write_shell_script(to_copy):
-            pass
+            outf = args['--output-shellscript']
+            if outf is None:
+                return
+            target = args['--target']
+
+            made_dirs = set()
+            with open(outf, 'w') as fd:
+                for info in sorted(to_copy, key=lambda i: i.get_abspath()):
+                    target_path = os.path.join(target, info.get_path())
+                    target_dir = os.path.dirname(target_path)
+                    if target_dir not in made_dirs:
+                        print >>fd, "\n# %s" % (pipes.quote(os.path.dirname(os.path.join(info.get_path()))))
+                        print >>fd, "mkdir -p %s" % pipes.quote(target_dir)
+                        made_dirs.add(target_dir)
+                    print >>fd, "rsync -a %s %s" % (pipes.quote(info.get_abspath()), pipes.quote(target_path))
 
         hasher.save()
         to_copy = build_copy_list(master_inventory, scan_inventory)
         write_debug_log(to_copy)
         write_shell_script(to_copy)
 
+    def validate():
+        if args['--output-shellscript'] is not None and args['--target'] is None:
+            print >>sys.stderr, "--target required with --output-shellscript"
+            sys.exit(1)
+
     args = docopt(__doc__, version=__version__)
+    validate()
     run()
