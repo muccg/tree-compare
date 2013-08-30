@@ -80,11 +80,21 @@ class FileInformation(object):
         """
         yields a FileInformation instance for each regular file under subdir, 
         recursing into directories. `fname` is relative to base_path, 
-        and `st` is the stat information for the file
+        and `st` is the stat information for the file. does not follow symbolic links.
         """
         dirname = os.path.join(base_path, subdir)
         for fname in os.listdir(dirname):
-            st = os.stat(os.path.join(dirname, fname))
+            fname_abspath = os.path.join(dirname, fname)
+            link_st = os.lstat(fname_abspath)
+            st = os.stat(fname_abspath)
+
+            if stat.S_ISLNK(link_st.st_mode):
+                if stat.S_ISDIR(st.st_mode):
+                    print >> sys.stderr, "not following link to directory `%s' -> `%s'" % (fname_abspath, os.readlink(fname_abspath))
+                    continue
+                elif stat.S_ISREG(st.st_mode):
+                    print >> sys.stderr, "link to file ?? `%s' -> `%s'" % (fname_abspath, os.readlink(fname_abspath))
+                    continue
             # recurse into directories and yield back out
             if stat.S_ISDIR(st.st_mode):
                 for file_info in cls.directory_iter(hasher, base_path, os.path.join(subdir, fname)):
