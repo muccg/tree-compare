@@ -98,16 +98,15 @@ class FileInformation(object):
                 # ignore internal symlinks (just structure, don't matter)
                 if within:
                     continue
-                # external links are notable -- log them
-                ty = None
-                if stat.S_ISDIR(st.st_mode):
-                    ty = 'dir '
-                elif stat.S_ISREG(st.st_mode) and not within:
-                    ty = 'file'
-                if ty is not None:
-                    print >> sys.stderr, "link to external %s `%s'\n" \
-                                         "                   -> `%s'" % (ty, fname_abspath, abstarget)
-                continue
+                # external links treated like normal
+                #  ty = None
+                #  if stat.S_ISDIR(st.st_mode):
+                #      ty = 'dir '
+                #  elif stat.S_ISREG(st.st_mode) and not within:
+                #      ty = 'file'
+                #  if ty is not None:
+                #      print >> sys.stderr, "note: link to external %s `%s' will be dereferenced\n" \
+                #                           "                   -> `%s'" % (ty, fname_abspath, abstarget)
             # recurse into directories and yield back out
             if stat.S_ISDIR(st.st_mode):
                 for file_info in cls.directory_iter(hasher, base_path, os.path.join(subdir, fname)):
@@ -255,7 +254,7 @@ if __name__ == '__main__':
                         print >>fd, "\n# %s" % (pipes.quote(os.path.dirname(os.path.join(info.get_path()))))
                         print >>fd, "mkdir -p %s" % pipes.quote(target_dir)
                         made_dirs.add(target_dir)
-                    print >>fd, "rsync -a %s %s" % (pipes.quote(info.get_abspath()), pipes.quote(target_path))
+                    print >>fd, "rsync -a -L %s %s" % (pipes.quote(info.get_abspath()), pipes.quote(target_path))
 
         hasher.save()
         to_copy = build_copy_list(master_inventory, scan_inventory)
