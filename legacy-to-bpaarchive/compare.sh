@@ -11,6 +11,15 @@ cd ~/tree-compare/legacy-to-bpaarchive || exit 1
         /pbstore/groupfs/bpa/legacy/melanoma/raw/ramaciotti/ \
         /pbstore/groupfs/bpa/bpaarchive/Melanoma/raw/Ramaciotti/
 
+# melanoma / new
+~/tree-compare/tree-compare.py \
+        -c treecompcache.json \
+        -l melanoma_new.csv \
+        -t /pbstore/groupfs/bpa/bpaarchive/Melanoma/XXFIXME/ \
+        -x melanoma_new.sh \
+        /pbstore/groupfs/bpa/legacy/melanoma/raw/new/ \
+        /pbstore/groupfs/bpa/bpaarchive/Melanoma/
+
 # melanoma / agrf
 ~/tree-compare/tree-compare.py \
         -c treecompcache.json \
@@ -38,3 +47,11 @@ cd ~/tree-compare/legacy-to-bpaarchive || exit 1
         /pbstore/groupfs/bpa/legacy/wheat/pathogen/ \
         /pbstore/groupfs/bpa/bpaarchive/Wheat_Pathogens/
 
+# legacy / raw
+~/tree-compare/tree-compare.py \
+        -c treecompcache.json \
+        -l legacy_raw.csv \
+        -t /pbstore/groupfs/bpa/bpaarchive/XXFIXME/ \
+        -x melanoma_new.sh \
+        /pbstore/groupfs/bpa/legacy/raw/ \
+        /pbstore/groupfs/bpa/bpaarchive/
