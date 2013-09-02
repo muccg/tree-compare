@@ -82,19 +82,31 @@ class FileInformation(object):
         recursing into directories. `fname` is relative to base_path, 
         and `st` is the stat information for the file. does not follow symbolic links.
         """
+        base_parts = os.path.split(base_path)
+        def within_base(path):
+            parts = os.path.split(path)
+            return parts[:len(base_parts)] == base_parts
         dirname = os.path.join(base_path, subdir)
         for fname in os.listdir(dirname):
             fname_abspath = os.path.join(dirname, fname)
             link_st = os.lstat(fname_abspath)
             st = os.stat(fname_abspath)
-
             if stat.S_ISLNK(link_st.st_mode):
-                if stat.S_ISDIR(st.st_mode):
-                    print >> sys.stderr, "not following link to directory `%s' -> `%s'" % (fname_abspath, os.readlink(fname_abspath))
+                target = os.readlink(fname_abspath)
+                abstarget = os.path.abspath(os.path.join(fname_abspath, target))
+                within = within_base(abstarget)
+                # ignore internal symlinks (just structure, don't matter)
+                if within:
                     continue
-                elif stat.S_ISREG(st.st_mode):
-                    print >> sys.stderr, "link to file ?? `%s' -> `%s'" % (fname_abspath, os.readlink(fname_abspath))
-                    continue
+                # external links treated like normal
+                #  ty = None
+                #  if stat.S_ISDIR(st.st_mode):
+                #      ty = 'dir '
+                #  elif stat.S_ISREG(st.st_mode) and not within:
+                #      ty = 'file'
+                #  if ty is not None:
+                #      print >> sys.stderr, "note: link to external %s `%s' will be dereferenced\n" \
+                #                           "                   -> `%s'" % (ty, fname_abspath, abstarget)
             # recurse into directories and yield back out
             if stat.S_ISDIR(st.st_mode):
                 for file_info in cls.directory_iter(hasher, base_path, os.path.join(subdir, fname)):
@@ -108,9 +120,9 @@ class Inventory(object):
     """
     inventory of files under a subdirectory
     """
-    def __init__(self, hasher, dir):
+    def __init__(self, hasher, dirpath):
         self.hasher = hasher
-        self.dir = dir
+        self.dir = os.path.normpath(dirpath)
         self.index = self.build_index()
         self.key_lookup = self.build_key_lookup()
 
@@ -242,7 +254,7 @@ if __name__ == '__main__':
                         print >>fd, "\n# %s" % (pipes.quote(os.path.dirname(os.path.join(info.get_path()))))
                         print >>fd, "mkdir -p %s" % pipes.quote(target_dir)
                         made_dirs.add(target_dir)
-                    print >>fd, "rsync -a %s %s" % (pipes.quote(info.get_abspath()), pipes.quote(target_path))
+                    print >>fd, "rsync -a -L %s %s" % (pipes.quote(info.get_abspath()), pipes.quote(target_path))
 
         hasher.save()
         to_copy = build_copy_list(master_inventory, scan_inventory)
