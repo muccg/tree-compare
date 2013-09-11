@@ -15,9 +15,20 @@ Options:
 __version__ = '0.0.1'
 
 from docopt import docopt
-import sys, os, stat, json, csv, time, pipes
+import sys, os, stat, bz2, json, csv, time, pipes
 from pprint import pprint
 from hashlib import sha1
+
+def json_dump_bzip2(fname, data):
+    fd = bz2.BZ2File(fname, 'w')
+    json.dump(data, fd)
+    fd.close()
+
+def json_load_bzip2(fname):
+    fd = bz2.BZ2File(fname, 'r')
+    data = json.load(fd)
+    fd.close()
+    return data
 
 class FileInformationKey(object):
     def __init__(self, info):
@@ -82,31 +93,26 @@ class FileInformation(object):
         recursing into directories. `fname` is relative to base_path, 
         and `st` is the stat information for the file. does not follow symbolic links.
         """
-        base_parts = os.path.split(base_path)
         def within_base(path):
-            parts = os.path.split(path)
-            return parts[:len(base_parts)] == base_parts
+            pfx = os.path.commonprefix([path, base_path])
+            return pfx == base_path
         dirname = os.path.join(base_path, subdir)
         for fname in os.listdir(dirname):
             fname_abspath = os.path.join(dirname, fname)
             link_st = os.lstat(fname_abspath)
-            st = os.stat(fname_abspath)
+            try:
+                st = os.stat(fname_abspath)
+            except OSError:
+                print "broken link:", fname_abspath
+                continue
             if stat.S_ISLNK(link_st.st_mode):
                 target = os.readlink(fname_abspath)
                 abstarget = os.path.abspath(os.path.join(fname_abspath, target))
                 within = within_base(abstarget)
                 # ignore internal symlinks (just structure, don't matter)
+                # external links treated like normal
                 if within:
                     continue
-                # external links treated like normal
-                #  ty = None
-                #  if stat.S_ISDIR(st.st_mode):
-                #      ty = 'dir '
-                #  elif stat.S_ISREG(st.st_mode) and not within:
-                #      ty = 'file'
-                #  if ty is not None:
-                #      print >> sys.stderr, "note: link to external %s `%s' will be dereferenced\n" \
-                #                           "                   -> `%s'" % (ty, fname_abspath, abstarget)
             # recurse into directories and yield back out
             if stat.S_ISDIR(st.st_mode):
                 for file_info in cls.directory_iter(hasher, base_path, os.path.join(subdir, fname)):
@@ -187,8 +193,7 @@ class Hasher(object):
         if self.fpath is None:
             return {}
         try:
-            with open(self.fpath) as fd:
-                return json.load(fd)
+            return json_load_bzip2(self.fpath)
         except IOError:
             return {}
 
@@ -198,8 +203,7 @@ class Hasher(object):
         if self.fpath is None:
             return
         tmp = self.fpath + '.tmp'
-        with open(tmp, 'w') as fd:
-            json.dump(self.cache, fd)
+        json_dump_bzip2(tmp, self.cache)
         os.rename(tmp, self.fpath)
 
 if __name__ == '__main__':
@@ -235,9 +239,9 @@ if __name__ == '__main__':
                 return
             with open(outf, 'w') as fd:
                 writer = csv.writer(fd)
-                writer.writerow([ 'Timestamp', 'Filename' ])
+                writer.writerow([ 'Timestamp', 'Filename', 'File Size' ])
                 for info in sorted(to_copy, key=lambda i: i.get_abspath()):
-                    writer.writerow( [ time.strftime("%Y-%m-%d", time.localtime(info.get_mtime())), info.get_abspath() ])
+                    writer.writerow([time.strftime("%Y-%m-%d", time.localtime(info.get_mtime())), info.get_abspath(), info.get_size()])
 
         def write_shell_script(to_copy):
             outf = args['--output-shellscript']
