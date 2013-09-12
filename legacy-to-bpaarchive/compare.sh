@@ -65,14 +65,27 @@ cd ~/tree-compare/legacy-to-bpaarchive || exit 1
 #         -x brlops144_melanoma_anu.sh \
 #         /pbstore/groupfs/bpa/ANU/melanoma_ANU/ \
 #         /pbstore/groupfs/bpa/bpaarchive/
-
-~/tree-compare/tree-compare.py \
-        -c treecompcache.json.bz2 \
-        -l brlops146_wheat_wyalcatchem.csv \
-        -t /pbstore/groupfs/bpa/bpaarchive/Wheat_Cultivars/raw/agrf/BRLOPS-146 \
-        -x brlops146_wheat_wyalcatchem.sh \
-        /pbstore/groupfs/bpa/legacy/raw/agrf/run152/ \
-        /pbstore/groupfs/bpa/bpaarchive/
+# ~/tree-compare/tree-compare.py \
+#         -c treecompcache.json.bz2 \
+#         -l brlops146_wheat_wyalcatchem.csv \
+#         -t /pbstore/groupfs/bpa/bpaarchive/Wheat_Cultivars/raw/agrf/BRLOPS-146 \
+#         -x brlops146_wheat_wyalcatchem.sh \
+#         /pbstore/groupfs/bpa/legacy/raw/agrf/run152/ \
+#         /pbstore/groupfs/bpa/bpaarchive/
+# ~/tree-compare/tree-compare.py \
+#         -c treecompcache.json.bz2 \
+#         -l brlops147_wheat_wheat7a.csv \
+#         -t /pbstore/groupfs/bpa/bpaarchive/Wheat7a/raw/anu/BRLOPS-147 \
+#         -x brlops147_wheat_wheat7a.sh \
+#         /pbstore/groupfs/bpa/temp/wheat7a/raw_data/ \
+#         /pbstore/groupfs/bpa/bpaarchive/
+# ~/tree-compare/tree-compare.py \
+#         -c treecompcache.json.bz2 \
+#         -l brlops149_unsw_melanoma.csv \
+#         -t /pbstore/groupfs/bpa/bpaarchive/Melanoma/raw/unsw/BRLOPS-149 \
+#         -x brlops149_unsw_melanoma.sh \
+#         /pbstore/groupfs/bpa/UNSW/ \
+#         /pbstore/groupfs/bpa/bpaarchive/
 
 exit 0
 
