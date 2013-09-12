@@ -2,7 +2,7 @@
 
 cd ~/tree-compare/legacy-to-bpaarchive || exit 1
 
-## # melanoma / ramaciotti
+## # melanoma / ramaciotti - DONE
 ## ~/tree-compare/tree-compare.py \
 ##         -c treecompcache.json.bz2 \
 ##         -l brlops132_melanoma_ramaciotti.csv \
@@ -11,16 +11,7 @@ cd ~/tree-compare/legacy-to-bpaarchive || exit 1
 ##         /pbstore/groupfs/bpa/legacy/melanoma/raw/ramaciotti/ \
 ##         /pbstore/groupfs/bpa/bpaarchive/Melanoma/raw/ramaciotti/
 ## 
-## # # melanoma / new
-## # ~/tree-compare/tree-compare.py \
-## #         -c treecompcache.json.bz2 \
-## #         -l brlops133_melanoma_new.csv \
-## #         -t /pbstore/groupfs/bpa/bpaarchive/Melanoma/raw/BRLOPS-133/ \
-## #         -x brlops133_melanoma_new.sh \
-## #         /pbstore/groupfs/bpa/legacy/melanoma/raw/new/ \
-## #         /pbstore/groupfs/bpa/bpaarchive/Melanoma/
-## 
-## # melanoma / agrf
+## # melanoma / agrf - DONE
 ## ~/tree-compare/tree-compare.py \
 ##         -c treecompcache.json.bz2 \
 ##         -l brlops134_melanoma_agrf.csv \
@@ -29,7 +20,7 @@ cd ~/tree-compare/legacy-to-bpaarchive || exit 1
 ##         /pbstore/groupfs/bpa/legacy/melanoma/raw/agrf/ \
 ##         /pbstore/groupfs/bpa/bpaarchive/Melanoma/raw/agrf/
 ## 
-## # wheat / cultivar
+## # wheat / cultivar - DONE
 ## ~/tree-compare/tree-compare.py \
 ##         -c treecompcache.json.bz2 \
 ##         -l brlops135_wheat_cultivar.csv \
@@ -38,7 +29,7 @@ cd ~/tree-compare/legacy-to-bpaarchive || exit 1
 ##         /pbstore/groupfs/bpa/legacy/wheat/cultivar/ \
 ##         /pbstore/groupfs/bpa/bpaarchive/Wheat_Cultivars/
 ## 
-## # wheat / pathogen
+## # wheat / pathogen - DONE
 ## ~/tree-compare/tree-compare.py \
 ##         -c treecompcache.json.bz2 \
 ##         -l brlops136_wheat_pathogen.csv \
@@ -47,7 +38,7 @@ cd ~/tree-compare/legacy-to-bpaarchive || exit 1
 ##         /pbstore/groupfs/bpa/legacy/wheat/pathogen/ \
 ##         /pbstore/groupfs/bpa/bpaarchive/Wheat_Pathogens/
 ## 
-## #   # legacy / raw
+## #   # legacy / raw - DONE
 ## #   ~/tree-compare/tree-compare.py \
 ## #           -c treecompcache.json.bz2 \
 ## #           -l legacy_raw.csv \
@@ -55,6 +46,35 @@ cd ~/tree-compare/legacy-to-bpaarchive || exit 1
 ## #           -x melanoma_new.sh \
 ## #           /pbstore/groupfs/bpa/legacy/raw/ \
 ## #           /pbstore/groupfs/bpa/bpaarchive/
+
+## # # melanoma / new NOT DONE
+## # ~/tree-compare/tree-compare.py \
+## #         -c treecompcache.json.bz2 \
+## #         -l brlops133_melanoma_new.csv \
+## #         -t /pbstore/groupfs/bpa/bpaarchive/Melanoma/raw/BRLOPS-133/ \
+## #         -x brlops133_melanoma_new.sh \
+## #         /pbstore/groupfs/bpa/legacy/melanoma/raw/new/ \
+## #         /pbstore/groupfs/bpa/bpaarchive/Melanoma/
+## 
+
+# RUNNING
+# ~/tree-compare/tree-compare.py \
+#         -c treecompcache.json.bz2 \
+#         -l brlops144_melanoma_anu.csv \
+#         -t /pbstore/groupfs/bpa/bpaarchive/Melanoma/raw/anu/BRLOPS-144/ \
+#         -x brlops144_melanoma_anu.sh \
+#         /pbstore/groupfs/bpa/ANU/melanoma_ANU/ \
+#         /pbstore/groupfs/bpa/bpaarchive/
+
+~/tree-compare/tree-compare.py \
+        -c treecompcache.json.bz2 \
+        -l brlops146_wheat_wyalcatchem.csv \
+        -t /pbstore/groupfs/bpa/bpaarchive/Wheat_Cultivars/raw/agrf/BRLOPS-146 \
+        -x brlops146_wheat_wyalcatchem.sh \
+        /pbstore/groupfs/bpa/legacy/raw/agrf/run152/ \
+        /pbstore/groupfs/bpa/bpaarchive/
+
+exit 0
 
 # final x-check
 ~/tree-compare/tree-compare.py \
